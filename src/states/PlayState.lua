@@ -28,6 +28,7 @@ function PlayState:enter(params)
     self.highScores = params.highScores
     self.ball = params.ball
     self.level = params.level
+    self.powerUp = Powerup(50, 50, 3)
 
     self.recoverPoints = 5000
 
@@ -53,6 +54,7 @@ function PlayState:update(dt)
     -- update positions based on velocity
     self.paddle:update(dt)
     self.ball:update(dt)
+    self.powerUp:update(dt)
 
     if self.ball:collides(self.paddle) then
         -- raise ball above paddle in case it goes below it, then reverse dy
@@ -85,6 +87,8 @@ function PlayState:update(dt)
             self.score = self.score + (brick.tier * 200 + brick.color * 25)
 
             -- trigger the brick's hit function, which removes it from play
+
+            
             brick:hit()
 
             -- if we have enough points, recover a point of health
@@ -210,6 +214,7 @@ function PlayState:render()
 
     self.paddle:render()
     self.ball:render()
+    self.powerUp:render()
 
     renderScore(self.score)
     renderHealth(self.health)
