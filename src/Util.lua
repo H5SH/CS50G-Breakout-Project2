@@ -128,7 +128,7 @@ end
 
 function GenrateQuadsPowerUp(atlas)
     local x = 0
-    local y = atlas:getHeight()
+    local y = 192
 
     local counter = 1
     local quads = {}

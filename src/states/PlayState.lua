@@ -22,13 +22,14 @@ PlayState = Class{__includes = BaseState}
 ]]
 function PlayState:enter(params)
     self.paddle = params.paddle
+    self.paddle:reset()
     self.bricks = params.bricks
     self.health = params.health
     self.score = params.score
     self.highScores = params.highScores
     self.ball = params.ball
     self.level = params.level
-    self.powerUp = Powerup(50, 50, 3)
+    self.powerUp = Powerup()
 
     self.recoverPoints = 5000
 
@@ -55,6 +56,10 @@ function PlayState:update(dt)
     self.paddle:update(dt)
     self.ball:update(dt)
     self.powerUp:update(dt)
+
+    if self.powerUp:catched(self.paddle) then
+        self.powerUp.genrate = false
+    end
 
     if self.ball:collides(self.paddle) then
         -- raise ball above paddle in case it goes below it, then reverse dy
@@ -86,9 +91,19 @@ function PlayState:update(dt)
             -- add to score
             self.score = self.score + (brick.tier * 200 + brick.color * 25)
 
+            if self.score > 100 and self.paddle.size % 4 > 0 then
+                self.paddle.size = self.paddle.size + 1
+                self.paddle.width = self.paddle.width + 32
+                self.paddle.height = self.paddle.height + 16
+            end
+
             -- trigger the brick's hit function, which removes it from play
 
-            
+            if not self.powerUp.genrate then
+                self.powerUp.x = brick.x
+                self.powerUp.y = brick.y
+                self.powerUp.genrate = true
+            end
             brick:hit()
 
             -- if we have enough points, recover a point of health
@@ -171,6 +186,7 @@ function PlayState:update(dt)
     -- if ball goes below bounds, revert to serve state and decrease health
     if self.ball.y >= VIRTUAL_HEIGHT then
         self.health = self.health - 1
+        self.paddle.size = self.paddle.size - 1
         gSounds['hurt']:play()
 
         if self.health == 0 then
