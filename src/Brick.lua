@@ -133,12 +133,15 @@ function Brick:update(dt)
     self.psystem:update(dt)
 end
 
+-- gFrames['brick'][24] key brick
+
 function Brick:render()
     if self.inPlay then
-        love.graphics.draw(gTextures['main'], 
+        love.graphics.draw(gTextures['main'],
             -- multiply color by 4 (-1) to get our color offset, then add tier to that
             -- to draw the correct tier and color brick onto the screen
             gFrames['bricks'][1 + ((self.color - 1) * 4) + self.tier],
+            -- [24]
             self.x, self.y)
     end
 end

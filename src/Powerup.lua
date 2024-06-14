@@ -9,7 +9,7 @@ function Powerup:init()
     self.y = 0
     self.width = 8
     self.height = 8
-    self.number = 1
+    self.number = 10
     self.genrate = false
 end
 

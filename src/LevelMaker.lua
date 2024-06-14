@@ -16,6 +16,7 @@
 NONE = 1
 SINGLE_PYRAMID = 2
 MULTI_PYRAMID = 3
+KEY_BLOCK = 1
 
 -- per-row patterns
 SOLID = 1           -- all colors the same in this row
