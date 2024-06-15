@@ -16,6 +16,8 @@
 
 PlayState = Class { __includes = BaseState }
 
+local hit_count = 1
+
 --[[
     We initialize what's in our PlayState via a state table that we pass between
     states as we go from playing to serving.
@@ -32,8 +34,10 @@ function PlayState:enter(params)
     self.ball2 = Ball()
     self.ball2.x = self.ball.x
     self.ball2.y = self.ball.y
-
     self.ball2.skin = math.random(7)
+
+    self.multiBalls = false
+
     self.level = params.level
     self.powerUp = Powerup()
 
@@ -63,11 +67,14 @@ function PlayState:update(dt)
     -- update positions based on velocity
     self.paddle:update(dt)
     self.ball:update(dt)
-    self.ball2:update(dt)
+    if self.multiBalls then
+        self.ball2:update(dt)
+    end
     self.powerUp:update(dt)
 
     if self.powerUp:catched(self.paddle) then
         self.powerUp.genrate = false
+        self.multiBalls = true
     end
 
     if self.ball:collides(self.paddle) then
@@ -87,9 +94,10 @@ function PlayState:update(dt)
         elseif self.ball.x > self.paddle.x + (self.paddle.width / 2) and self.paddle.dx > 0 then
             self.ball.dx = 50 + (8 * math.abs(self.paddle.x + self.paddle.width / 2 - self.ball.x))
         end
+        gSounds['paddle-hit']:play()
     end
     -- do the same for ball
-    if self.ball2:collides(self.paddle) then
+    if self.ball2:collides(self.paddle) and self.multiBalls then
         self.ball2.y = self.paddle.y - 8
         self.ball2.dy = -self.ball2.dy
 
@@ -97,8 +105,8 @@ function PlayState:update(dt)
             self.ball2.dx = -50 + -(8 * math.abs(self.paddle.x + self.paddle.width / 2 - self.ball2.x))
         elseif self.ball2.x > self.paddle.x + (self.paddle.width / 2) and self.paddle.dx > 0 then
             self.ball2.dx = 50 + (8 * math.abs(self.paddle.x + self.paddle.width / 2 - self.ball2.x))
-            gSounds['paddle-hit']:play()
         end
+        gSounds['paddle-hit']:play()
     end
 
 
@@ -108,12 +116,12 @@ function PlayState:update(dt)
         if brick.inPlay and self.ball:collides(brick) then
             -- only allow colliding with one brick, for corners
             -- add to score
-            self:ballCollidesBrick(self.ball, brick)
+            self:ballCollidesBrick(self.ball, brick, dt)
             break
         end
 
-        if brick.inPlay and self.ball2:collides(brick) then
-            self:ballCollidesBrick(self.ball2, brick)
+        if brick.inPlay and self.ball2:collides(brick) and self.multiBalls then
+            self:ballCollidesBrick(self.ball2, brick, dt)
             break
         end
     end
@@ -152,7 +160,8 @@ function PlayState:update(dt)
     end
 end
 
-function PlayState:ballCollidesBrick(ball, brick)
+
+function PlayState:ballCollidesBrick(ball, brick, dt)
     self.score = self.score + (brick.tier * 200 + brick.color * 25)
 
     if self.score > 100 and self.paddle.size % 4 > 0 then
@@ -162,13 +171,16 @@ function PlayState:ballCollidesBrick(ball, brick)
     end
 
     -- trigger the brick's hit function, which removes it from play
-
-    if not self.powerUp.genrate then
+    if (not self.powerUp.genrate) and hit_count >= 10 then
         self.powerUp.x = brick.x
         self.powerUp.y = brick.y
         self.powerUp.genrate = true
+        powerupTime = math.max(math.min(math.random(2, 5), math.random(2, 5)),
+        math.min(math.random(2, 5), math.random(2, 5)))
+        hit_count = 0
     end
     brick:hit()
+    hit_count = hit_count + 1
 
     -- if we have enough points, recover a point of health
     if self.score > self.recoverPoints then
@@ -253,7 +265,9 @@ function PlayState:render()
 
     self.paddle:render()
     self.ball:render()
-    self.ball2:render()
+    if self.multiBalls then
+        self.ball2:render()
+    end
     self.powerUp:render()
 
     renderScore(self.score)
